@@ -1,5 +1,5 @@
 <resources>
     <string name="app_name">Book Listing</string>
     <string name="api_key">AIzaSyDNxY-omLm2VMqrnxRFUwOOxCb5Nr5uAeU</string>
-    <string name="URL">https://www.googleapis.com/books/v1/volumes?q=</string>
+
 </resources>
