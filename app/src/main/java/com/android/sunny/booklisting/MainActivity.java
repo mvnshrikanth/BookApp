@@ -12,6 +12,10 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -79,7 +83,7 @@ public class MainActivity extends AppCompatActivity {
                             .appendQueryParameter(API_KEY_PARAM, api_key)
                             .build();
 
-                    //  Log.v(LOG_TAG, "Built URI " + uri.toString());
+                    Log.v(LOG_TAG, "Built URI " + uri.toString());
 
 
                     URL url = new URL(uri.toString());
@@ -109,7 +113,7 @@ public class MainActivity extends AppCompatActivity {
 
                     booksJsonData = stringBuffer.toString();
 
-                    //  Log.v(LOG_TAG, "Book Data : " + booksJsonData);
+                    Log.v(LOG_TAG, "Book Data : " + booksJsonData);
 
                 } catch (Exception e) {
                     Log.e(LOG_TAG, "Error : ", e);
@@ -140,9 +144,54 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
-        private ArrayList<Books> JsonDataParser(String booksJsonData) {
+        private ArrayList<Books> JsonDataParser(String booksJsonData) throws JSONException {
 
-            return null;
+            final String BOOK_LIST = "items";
+            final String BOOK_IMAGES = "imageLinks";
+
+            ArrayList<Books> booksArrayList = new ArrayList<Books>();
+
+            JSONObject rootBookJsonObject = new JSONObject(booksJsonData);
+            JSONArray bookListJsonArray = rootBookJsonObject.getJSONArray(BOOK_LIST);
+
+            String mBookId;
+            String mBookTitle;
+            String[] mBookAuthor;
+            String mBookPosterPath;
+            String mBookPublisher;
+
+            for (int i = 0; i < bookListJsonArray.length(); i++) {
+
+                JSONObject bookJsonObject = bookListJsonArray.getJSONObject(i);
+                mBookId = bookJsonObject.getString(Books.BOOK_ID);
+                Log.v(LOG_TAG, "BOOK ID : " + mBookId);
+
+                String bookVolInfo = bookJsonObject.getString(Books.BOOK_VOLUME_INFO);
+                JSONObject bookVolInfoJsonObject = new JSONObject(bookVolInfo);
+
+                mBookTitle = bookVolInfoJsonObject.getString(Books.BOOK_TITLE);
+                Log.v(LOG_TAG, "TITLE : " + mBookTitle);
+
+                mBookPublisher = bookVolInfoJsonObject.getString(Books.BOOK_PUBLISHER);
+                Log.v(LOG_TAG, "PUBLISHERS : " + mBookPublisher);
+
+                JSONArray bookAuthorsJsonArray = bookVolInfoJsonObject.getJSONArray(Books.BOOK_AUTHORS);
+                //Log.v(LOG_TAG, "AUTHOR COUNT: " + bookAuthors.length());
+                mBookAuthor = new String[bookAuthorsJsonArray.length()];
+
+                for (int n = 0; n < bookAuthorsJsonArray.length(); n++) {
+                    mBookAuthor[n] = bookAuthorsJsonArray.getString(n);
+                    Log.v(LOG_TAG, "AUTHOR : " + mBookAuthor[n]);
+                }
+
+                JSONObject bookThumbnailImageJsonObject = bookVolInfoJsonObject.getJSONObject(BOOK_IMAGES);
+                mBookPosterPath = bookThumbnailImageJsonObject.getString(Books.BOOK_IMAGE);
+                Log.v(LOG_TAG, "Image URL : " + mBookPosterPath);
+
+                booksArrayList.add(new Books(mBookId, mBookTitle, mBookAuthor, mBookPosterPath));
+
+            }
+            return booksArrayList;
         }
 
         @Override
