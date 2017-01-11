@@ -6,13 +6,13 @@ import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.TextView;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -31,6 +31,7 @@ public class MainActivity extends AppCompatActivity {
     private final String LOG_TAG = MainActivity.class.getSimpleName();
     EditText editText;
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -42,16 +43,17 @@ public class MainActivity extends AppCompatActivity {
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                ListView listView = (ListView) findViewById(R.id.list_view);
+                TextView textView = (TextView) findViewById(R.id.network_text_view);
                 if (networkAvailable()) {
                     // Log.v(LOG_TAG, "Search Parameter : " + editText.getText().toString());
+                    textView.setVisibility(View.GONE);
+                    listView.setVisibility(View.VISIBLE);
                     BookGetApiData bookGetApiData = new BookGetApiData();
                     bookGetApiData.execute(editText.getText().toString());
                 } else {
-                    AlertDialog.Builder builder = new AlertDialog.Builder(getApplicationContext());
-                    builder.setTitle("Network Issue")
-                            .setMessage("Network unavailable please try later.")
-                            .create()
-                            .show();
+                    textView.setVisibility(View.VISIBLE);
+                    listView.setVisibility(View.GONE);
                 }
             }
         });
@@ -60,7 +62,12 @@ public class MainActivity extends AppCompatActivity {
     public boolean networkAvailable() {
         ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
-        return networkInfo != null && networkInfo.isConnected();
+        if (networkInfo == null) {
+            return false;
+        } else if (networkInfo.isConnected()) {
+            return true;
+        }
+        return false;
     }
 
     public class BookGetApiData extends AsyncTask<String, Void, ArrayList<Books>> {
@@ -69,7 +76,7 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         protected ArrayList<Books> doInBackground(String... params) {
-            String api_key = getResources().getString(R.string.api_key);
+            String api_key = getResources().getString(R.string.text_api_key);
             String booksJsonData = null;
 
             if (params.length != 0) {

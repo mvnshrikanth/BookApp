@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">Book Listing</string>
-    <string name="api_key">AIzaSyDNxY-omLm2VMqrnxRFUwOOxCb5Nr5uAeU</string>
+    <string name="text_api_key">AIzaSyDNxY-omLm2VMqrnxRFUwOOxCb5Nr5uAeU</string>
+    <string name="text_network_unavailable">Network not available please try agian later.</string>
 </resources>
