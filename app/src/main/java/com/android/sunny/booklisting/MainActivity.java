@@ -44,16 +44,15 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 ListView listView = (ListView) findViewById(R.id.list_view);
-                TextView textView = (TextView) findViewById(R.id.network_text_view);
+                TextView textView = (TextView) findViewById(R.id.empty_text_view);
+
                 if (networkAvailable()) {
-                    // Log.v(LOG_TAG, "Search Parameter : " + editText.getText().toString());
-                    textView.setVisibility(View.GONE);
-                    listView.setVisibility(View.VISIBLE);
                     BookGetApiData bookGetApiData = new BookGetApiData();
                     bookGetApiData.execute(editText.getText().toString());
                 } else {
-                    textView.setVisibility(View.VISIBLE);
-                    listView.setVisibility(View.GONE);
+                    listView.setAdapter(null);
+                    textView.setText(getResources().getText(R.string.text_network_unavailable));
+                    listView.setEmptyView(textView);
                 }
             }
         });
@@ -90,18 +89,14 @@ public class MainActivity extends AppCompatActivity {
                     final String API_KEY_PARAM = "key";
                     final String SEARCH_PARAM = "q";
 
-                    // Log.v(LOG_TAG, "Search Parameter : " + params[0]);
 
                     Uri uri = Uri.parse(BOOKAPI_BASE_URL).buildUpon()
                             .appendQueryParameter(SEARCH_PARAM, params[0])
                             .appendQueryParameter(API_KEY_PARAM, api_key)
                             .build();
 
-                    // Log.v(LOG_TAG, "Built URI " + uri.toString());
-
 
                     URL url = new URL(uri.toString());
-                    //URL url = new URL("https://www.googleapis.com/books/v1/volumes?q=dann+brown&key=AIzaSyDNxY-omLm2VMqrnxRFUwOOxCb5Nr5uAeU");
 
                     urlConnection = (HttpURLConnection) url.openConnection();
                     urlConnection.setRequestMethod("GET");
@@ -126,8 +121,6 @@ public class MainActivity extends AppCompatActivity {
                     }
 
                     booksJsonData = stringBuffer.toString();
-
-                    //  Log.v(LOG_TAG, "Book Data : " + booksJsonData);
 
                 } catch (Exception e) {
                     Log.e(LOG_TAG, "Error : ", e);
@@ -181,16 +174,14 @@ public class MainActivity extends AppCompatActivity {
                 JSONObject bookVolInfoJsonObject = new JSONObject(bookVolInfo);
 
                 mBookTitle = bookVolInfoJsonObject.getString(Books.BOOK_TITLE);
-                //Log.v(LOG_TAG, "TITLE : " + mBookTitle);
 
                 if (bookVolInfo.toLowerCase().contains("\"authors\":")) {
                     JSONArray bookAuthorsJsonArray = bookVolInfoJsonObject.getJSONArray(Books.BOOK_AUTHORS);
-                    //Log.v(LOG_TAG, "AUTHOR COUNT: " + bookAuthors.length());
+
                     mBookAuthor = new String[bookAuthorsJsonArray.length()];
 
                     for (int n = 0; n < bookAuthorsJsonArray.length(); n++) {
                         mBookAuthor[n] = bookAuthorsJsonArray.getString(n);
-                        //  Log.v(LOG_TAG, "AUTHOR : " + mBookAuthor[n]);
                     }
                 } else {
                     mBookAuthor = new String[1];
@@ -203,7 +194,6 @@ public class MainActivity extends AppCompatActivity {
                 } else {
                     mBookPosterPath = null;
                 }
-                //Log.v(LOG_TAG, "Image URL : " + mBookPosterPath);
 
                 booksArrayList.add(new Books(mBookTitle, mBookAuthor, mBookPosterPath));
 
@@ -214,8 +204,19 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected void onPostExecute(ArrayList<Books> books) {
             ListView listView = (ListView) findViewById(R.id.list_view);
-            BooksAdapter booksAdapter = new BooksAdapter(getApplicationContext(), books);
-            listView.setAdapter(booksAdapter);
+            TextView textView = (TextView) findViewById(R.id.empty_text_view);
+
+           /* final ArrayList<Books> Books = new ArrayList<Books>();
+            Books = books;*/
+
+            if ((books == null)) {
+                textView.setText(getResources().getText(R.string.text_no_data_found));
+                listView.setAdapter(null);
+                listView.setEmptyView(textView);
+            } else {
+                BooksAdapter booksAdapter = new BooksAdapter(getApplicationContext(), books);
+                listView.setAdapter(booksAdapter);
+            }
         }
     }
 
