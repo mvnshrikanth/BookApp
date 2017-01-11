@@ -6,39 +6,21 @@ package com.android.sunny.booklisting;
 
 public class Books {
 
-    public static final String BOOK_ID = "id";
+
     public static final String BOOK_TITLE = "title";
-    public static final String BOOK_PUBLISHER = "publisher";
     public static final String BOOK_IMAGE = "smallThumbnail";
     public static final String BOOK_AUTHORS = "authors";
     public static final String BOOK_VOLUME_INFO = "volumeInfo";
-    private String mBookId;
+
     private String mBookTitle;
     private String[] mBookAuthor;
     private String mBookPosterPath;
-    private String mBookPublisher;
 
+    public Books(String mBookTitle, String[] mBookAuthor, String mPosterPath) {
 
-    public Books(String mBookId, String mBookTitle, String[] mBookAuthor, String mPosterPath) {
-        this.mBookId = mBookId;
         this.mBookAuthor = mBookAuthor;
         this.mBookTitle = mBookTitle;
         this.mBookPosterPath = mPosterPath;
-    }
-
-    public Books(String mBookId, String mBookTitle, String[] mBookAuthor) {
-        this.mBookId = mBookId;
-        this.mBookAuthor = mBookAuthor;
-        this.mBookTitle = mBookTitle;
-    }
-
-
-    public String getmBookId() {
-        return mBookId;
-    }
-
-    public void setmBookId(String mBookId) {
-        this.mBookId = mBookId;
     }
 
     public String getmBookTitle() {
@@ -49,8 +31,12 @@ public class Books {
         this.mBookTitle = mBookTitle;
     }
 
-    public String[] getmBookAuthor() {
-        return mBookAuthor;
+    public String getmBookAuthor() {
+        String authors = "";
+        for (int i = 0; i < mBookAuthor.length; i++) {
+            authors = authors + mBookAuthor[i];
+        }
+        return authors;
     }
 
     public void setmBookAuthor(String[] mBookAuthor) {
@@ -65,11 +51,4 @@ public class Books {
         this.mBookPosterPath = mBookPosterPath;
     }
 
-    public String getmBookPublisher() {
-        return mBookPublisher;
-    }
-
-    public void setmBookPublisher(String mBookPublisher) {
-        this.mBookPublisher = mBookPublisher;
-    }
 }

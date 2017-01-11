@@ -6,11 +6,13 @@ import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ListView;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -41,10 +43,15 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 if (networkAvailable()) {
-
-                    //  Log.v(LOG_TAG, "Search Parameter : " + editText.getText().toString());
+                    // Log.v(LOG_TAG, "Search Parameter : " + editText.getText().toString());
                     BookGetApiData bookGetApiData = new BookGetApiData();
                     bookGetApiData.execute(editText.getText().toString());
+                } else {
+                    AlertDialog.Builder builder = new AlertDialog.Builder(getApplicationContext());
+                    builder.setTitle("Network Issue")
+                            .setMessage("Network unavailable please try later.")
+                            .create()
+                            .show();
                 }
             }
         });
@@ -76,14 +83,14 @@ public class MainActivity extends AppCompatActivity {
                     final String API_KEY_PARAM = "key";
                     final String SEARCH_PARAM = "q";
 
-                    //  Log.v(LOG_TAG, "Search Parameter : " + params[0]);
+                    // Log.v(LOG_TAG, "Search Parameter : " + params[0]);
 
                     Uri uri = Uri.parse(BOOKAPI_BASE_URL).buildUpon()
                             .appendQueryParameter(SEARCH_PARAM, params[0])
                             .appendQueryParameter(API_KEY_PARAM, api_key)
                             .build();
 
-                    Log.v(LOG_TAG, "Built URI " + uri.toString());
+                    // Log.v(LOG_TAG, "Built URI " + uri.toString());
 
 
                     URL url = new URL(uri.toString());
@@ -113,7 +120,7 @@ public class MainActivity extends AppCompatActivity {
 
                     booksJsonData = stringBuffer.toString();
 
-                    Log.v(LOG_TAG, "Book Data : " + booksJsonData);
+                    //  Log.v(LOG_TAG, "Book Data : " + booksJsonData);
 
                 } catch (Exception e) {
                     Log.e(LOG_TAG, "Error : ", e);
@@ -149,46 +156,49 @@ public class MainActivity extends AppCompatActivity {
             final String BOOK_LIST = "items";
             final String BOOK_IMAGES = "imageLinks";
 
-            ArrayList<Books> booksArrayList = new ArrayList<Books>();
+            final ArrayList<Books> booksArrayList = new ArrayList<Books>();
 
             JSONObject rootBookJsonObject = new JSONObject(booksJsonData);
             JSONArray bookListJsonArray = rootBookJsonObject.getJSONArray(BOOK_LIST);
 
-            String mBookId;
             String mBookTitle;
             String[] mBookAuthor;
             String mBookPosterPath;
-            String mBookPublisher;
+
 
             for (int i = 0; i < bookListJsonArray.length(); i++) {
 
                 JSONObject bookJsonObject = bookListJsonArray.getJSONObject(i);
-                mBookId = bookJsonObject.getString(Books.BOOK_ID);
-                Log.v(LOG_TAG, "BOOK ID : " + mBookId);
 
                 String bookVolInfo = bookJsonObject.getString(Books.BOOK_VOLUME_INFO);
                 JSONObject bookVolInfoJsonObject = new JSONObject(bookVolInfo);
 
                 mBookTitle = bookVolInfoJsonObject.getString(Books.BOOK_TITLE);
-                Log.v(LOG_TAG, "TITLE : " + mBookTitle);
+                //Log.v(LOG_TAG, "TITLE : " + mBookTitle);
 
-                mBookPublisher = bookVolInfoJsonObject.getString(Books.BOOK_PUBLISHER);
-                Log.v(LOG_TAG, "PUBLISHERS : " + mBookPublisher);
+                if (bookVolInfo.toLowerCase().contains("\"authors\":")) {
+                    JSONArray bookAuthorsJsonArray = bookVolInfoJsonObject.getJSONArray(Books.BOOK_AUTHORS);
+                    //Log.v(LOG_TAG, "AUTHOR COUNT: " + bookAuthors.length());
+                    mBookAuthor = new String[bookAuthorsJsonArray.length()];
 
-                JSONArray bookAuthorsJsonArray = bookVolInfoJsonObject.getJSONArray(Books.BOOK_AUTHORS);
-                //Log.v(LOG_TAG, "AUTHOR COUNT: " + bookAuthors.length());
-                mBookAuthor = new String[bookAuthorsJsonArray.length()];
-
-                for (int n = 0; n < bookAuthorsJsonArray.length(); n++) {
-                    mBookAuthor[n] = bookAuthorsJsonArray.getString(n);
-                    Log.v(LOG_TAG, "AUTHOR : " + mBookAuthor[n]);
+                    for (int n = 0; n < bookAuthorsJsonArray.length(); n++) {
+                        mBookAuthor[n] = bookAuthorsJsonArray.getString(n);
+                        //  Log.v(LOG_TAG, "AUTHOR : " + mBookAuthor[n]);
+                    }
+                } else {
+                    mBookAuthor = new String[1];
+                    mBookAuthor[0] = "No Author Found";
                 }
 
-                JSONObject bookThumbnailImageJsonObject = bookVolInfoJsonObject.getJSONObject(BOOK_IMAGES);
-                mBookPosterPath = bookThumbnailImageJsonObject.getString(Books.BOOK_IMAGE);
-                Log.v(LOG_TAG, "Image URL : " + mBookPosterPath);
+                if (bookVolInfo.toLowerCase().contains("\"smallthumbnail\":")) {
+                    JSONObject bookThumbnailImageJsonObject = bookVolInfoJsonObject.getJSONObject(BOOK_IMAGES);
+                    mBookPosterPath = bookThumbnailImageJsonObject.getString(Books.BOOK_IMAGE);
+                } else {
+                    mBookPosterPath = null;
+                }
+                //Log.v(LOG_TAG, "Image URL : " + mBookPosterPath);
 
-                booksArrayList.add(new Books(mBookId, mBookTitle, mBookAuthor, mBookPosterPath));
+                booksArrayList.add(new Books(mBookTitle, mBookAuthor, mBookPosterPath));
 
             }
             return booksArrayList;
@@ -196,7 +206,9 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         protected void onPostExecute(ArrayList<Books> books) {
-            super.onPostExecute(books);
+            ListView listView = (ListView) findViewById(R.id.list_view);
+            BooksAdapter booksAdapter = new BooksAdapter(getApplicationContext(), books);
+            listView.setAdapter(booksAdapter);
         }
     }
 
